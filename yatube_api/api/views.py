@@ -52,3 +52,9 @@ class FollowViewSet(viewsets.ModelViewSet):
     queryset = Follow.objects.all()
     serializer_class = FollowSerializer
     http_method_names = ['post', 'get']
+
+    def perform_create(self, serializer):
+        serializer.save(
+            user=self.requests.user,
+        )
+
