@@ -1,8 +1,9 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, permissions
 
-from posts.models import Group, Post
-from .serializers import CommentSerializer, GroupSerializer, PostSerializer
+from posts.models import Group, Follow, Post
+from .serializers import (CommentSerializer, GroupSerializer,
+                          PostSerializer, FollowSerializer)
 from .permissions import IsAuthorOrReadOnly
 
 
@@ -18,9 +19,7 @@ class GroupViewSet(viewsets.ModelViewSet):
     serializer_class = GroupSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly,
                           IsAuthorOrReadOnly]
-
-    def perform_create(self, serializer):
-        return False
+    http_method_names = ['get', 'put', 'patch', 'delete']
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -37,6 +36,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         return post.comments.filter(post_id=post)
 
     def perform_create(self, serializer):
+        """Переопределение создания комментария"""
         serializer.save(
             author=self.request.user,
             post=get_object_or_404(
@@ -44,3 +44,8 @@ class CommentViewSet(viewsets.ModelViewSet):
                 id=self.kwargs['post_id']
             )
         )
+
+
+class FollowViewSet(viewsets.ModelViewSet):
+    queryset = Follow.objects.all()
+    serializer_class = FollowSerializer
