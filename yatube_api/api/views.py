@@ -5,6 +5,7 @@ from posts.models import Group, Follow, Post
 from .serializers import (CommentSerializer, GroupSerializer,
                           PostSerializer, FollowSerializer)
 from .permissions import IsAuthorOrReadOnly
+from .paginations import StandardResultSetPagination
 
 
 class PostViewSet(viewsets.ModelViewSet):
@@ -12,6 +13,7 @@ class PostViewSet(viewsets.ModelViewSet):
     serializer_class = PostSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly,
                           IsAuthorOrReadOnly]
+    pagination_class = StandardResultSetPagination
 
 
 class GroupViewSet(viewsets.ModelViewSet):
@@ -49,3 +51,4 @@ class CommentViewSet(viewsets.ModelViewSet):
 class FollowViewSet(viewsets.ModelViewSet):
     queryset = Follow.objects.all()
     serializer_class = FollowSerializer
+    http_method_names = ['post', 'get']
