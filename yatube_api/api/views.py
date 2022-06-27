@@ -1,11 +1,11 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets, permissions
+from rest_framework import filters, viewsets, permissions
 
-from posts.models import Group, Follow, Post
+from posts.models import Group, Post
+from .paginations import StandardResultSetPagination
+from .permissions import IsAuthorOrReadOnly
 from .serializers import (CommentSerializer, GroupSerializer,
                           PostSerializer, FollowSerializer)
-from .permissions import IsAuthorOrReadOnly
-from .paginations import StandardResultSetPagination
 
 
 class PostViewSet(viewsets.ModelViewSet):
@@ -14,6 +14,11 @@ class PostViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly,
                           IsAuthorOrReadOnly]
     pagination_class = StandardResultSetPagination
+
+    def perform_create(self, serializer):
+        serializer.save(
+            author=self.request.user
+        )
 
 
 class GroupViewSet(viewsets.ModelViewSet):
@@ -49,12 +54,17 @@ class CommentViewSet(viewsets.ModelViewSet):
 
 
 class FollowViewSet(viewsets.ModelViewSet):
-    queryset = Follow.objects.all()
     serializer_class = FollowSerializer
     http_method_names = ['post', 'get']
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['following__username']
+
+    def get_queryset(self):
+        """Переопределения создания queryset"""
+        return self.request.user.follower.all()
 
     def perform_create(self, serializer):
+        """Переопределения создания подписки"""
         serializer.save(
-            user=self.requests.user,
+            user=self.request.user
         )
-
